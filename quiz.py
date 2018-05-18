@@ -2,7 +2,7 @@
 
 #---------------------------Menu---------------------------
 
-option = "string"
+option = ""
 
 while option != "3":
     print("1. Ask Questions")
@@ -33,6 +33,8 @@ while option != "3":
                 
             else:
                 print("You're wrong!")
+                print("Your score is: ")
+                print(score)
         
     
         

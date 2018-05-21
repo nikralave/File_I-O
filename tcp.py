@@ -1,32 +1,46 @@
+import datetime
 import socket
 
-#IP ='127.0.0.1'
-IP ='0.0.0.0'
-PORT = 1235
+IP = '0.0.0.0'
+PORT = 8081
 MAXIMUM_QUEUE_SIZE = 0
 BUFFER_SIZE = 2048
 
-listening_socket = socket.socket()
-listening_socket.bind((IP, PORT))
 
-listening_socket.listen(MAXIMUM_QUEUE_SIZE)
-print("Hello, I'm waiting for a connection")
+def show_time(client_socket):
+    now = datetime.datetime.now()
+    response_headers = "HTTP/1.1 200 OK\n\n"
+    response_body = "The time is %s" % now.strftime("%H:%M:%S")
+    encoded_response = (response_headers + response_body).encode()
+    client_socket.send(encoded_response)
 
-while True:
 
-    (client_socket, client_ip_and_port) = listening_socket.accept()
-    # (client_ip, client_port) = client_ip_and_port
-    
-    initial_response ="Hi there what's up?\n".encode()
-    client_socket.send(initial_response)
-    
-    client_message = client_socket.recv(BUFFER_SIZE).decode()
-    echo_response = ("You said: " + client_message).encode()
-    client_socket.send(echo_response)
-    client_socket.close()
+def respond(client_socket, client_ip_and_port):
+    request = client_socket.recv(BUFFER_SIZE).decode()
+    request_line = request.splitlines()[0]
+    resource = request_line.split()[1]
 
-# response = "Hi there, here's my response\n".encode()
-# client_socket.send(response)
+    if resource == "/time":
+        show_time(client_socket)
+    else:
+        response_headers = "HTTP/1.1 200 OK\n\n"
+        response_body = "Your request was:\n" + request
+        encoded_response = (response_headers + response_body).encode()
+        client_socket.send(encoded_response)
 
-print("See ya later")
-#print(client_ip_and_port)
+
+def serverloop():
+    listening_socket = socket.socket()
+    listening_socket.bind((IP, PORT))
+    listening_socket.listen(MAXIMUM_QUEUE_SIZE)
+
+    while True:
+        (client_socket, client_ip_and_port) = listening_socket.accept()
+        respond(client_socket, client_ip_and_port)
+        client_socket.close()
+
+
+if __name__ == '__main__':  # is this file executed directly (not just imported)
+    print('Server launched on %s:%s, press ctrl+c to kill the server'
+          % (IP, PORT))
+    serverloop()
